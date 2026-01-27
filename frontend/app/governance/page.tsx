@@ -14,6 +14,7 @@ import {
     TrendingUp,
     Users,
     DollarSign,
+    Coins,
     ArrowRight,
     AlertCircle,
     Loader2,
@@ -70,10 +71,11 @@ export default function GovernancePage() {
         primary: 'linear-gradient(135deg, #14279B 0%, #3D56B2 50%, #5C7AEA 100%)',
     };
 
-    const formatAmount = (amount: bigint) => {
+    const formatAmount = (amount: bigint | undefined) => {
+        if (!amount) return '0';
         try {
             const formatted = formatEther(amount);
-            return Number(formatted).toLocaleString('id-ID');
+            return Number(formatted).toLocaleString('id-ID', { maximumFractionDigits: 2 });
         } catch {
             return '0';
         }
@@ -153,7 +155,7 @@ export default function GovernancePage() {
                             className="text-transparent bg-clip-text"
                             style={{ backgroundImage: gradientColors.primary }}
                         >
-                            Governance
+                            Community Voice
                         </span>
                     </h1>
                     <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
@@ -161,6 +163,7 @@ export default function GovernancePage() {
                     </p>
                 </div>
 
+                {/* Treasury Stats */}
                 {/* Treasury Stats */}
                 <div id="treasury-stats" className="grid md:grid-cols-4 gap-6 mb-12">
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
@@ -181,8 +184,11 @@ export default function GovernancePage() {
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                                <Vote className="w-6 h-6 text-purple-600" />
+                            <div
+                                className="w-12 h-12 rounded-xl flex items-center justify-center"
+                                style={{ background: gradientColors.primary }}
+                            >
+                                <Vote className="w-6 h-6 text-white" />
                             </div>
                             <div>
                                 <p className="text-sm text-gray-500">Active Proposals</p>
@@ -194,8 +200,11 @@ export default function GovernancePage() {
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                                <TrendingUp className="w-6 h-6 text-green-600" />
+                            <div
+                                className="w-12 h-12 rounded-xl flex items-center justify-center"
+                                style={{ background: gradientColors.primary }}
+                            >
+                                <TrendingUp className="w-6 h-6 text-white" />
                             </div>
                             <div>
                                 <p className="text-sm text-gray-500">Platform Fee</p>
@@ -207,8 +216,11 @@ export default function GovernancePage() {
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                                <DollarSign className="w-6 h-6 text-blue-600" />
+                            <div
+                                className="w-12 h-12 rounded-xl flex items-center justify-center"
+                                style={{ background: gradientColors.primary }}
+                            >
+                                <Coins className="w-6 h-6 text-white" />
                             </div>
                             <div>
                                 <p className="text-sm text-gray-500">Your Balance</p>
@@ -221,7 +233,7 @@ export default function GovernancePage() {
                             <button
                                 onClick={handleWithdraw}
                                 disabled={isWithdrawPending}
-                                className="w-full mt-2 py-2 rounded-lg bg-green-500 text-white text-sm font-medium hover:bg-green-600 transition-colors disabled:opacity-50"
+                                className="w-full mt-2 py-2 rounded-lg bg-[#14279B] text-white text-sm font-medium hover:bg-[#3D56B2] transition-colors disabled:opacity-50"
                             >
                                 {isWithdrawPending ? 'Withdrawing...' : 'Withdraw'}
                             </button>
@@ -288,7 +300,7 @@ export default function GovernancePage() {
                                                     By {formatAddress(proposal.proposer)}
                                                 </span>
                                                 <span>
-                                                    <DollarSign className="w-4 h-4 inline mr-1" />
+                                                    <Coins className="w-4 h-4 inline mr-1" />
                                                     {formatAmount(proposal.amount)} IDRX
                                                 </span>
                                                 <span>

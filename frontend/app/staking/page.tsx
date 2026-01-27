@@ -288,6 +288,7 @@ export default function StakingPage() {
                 </div>
 
                 {/* Stats Cards */}
+                {/* Stats Cards */}
                 <div id="staking-stats" className="grid md:grid-cols-4 gap-6 mb-12">
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
                         <div className="flex items-center gap-3">
@@ -307,7 +308,7 @@ export default function StakingPage() {
                         <div className="flex items-center gap-3">
                             <div
                                 className="w-12 h-12 rounded-xl flex items-center justify-center"
-                                style={{ background: gradientColors.gold }}
+                                style={{ background: gradientColors.primary }}
                             >
                                 <Award className="w-6 h-6 text-white" />
                             </div>
@@ -319,8 +320,11 @@ export default function StakingPage() {
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
                         <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                                <Sparkles className="w-6 h-6 text-green-600" />
+                            <div
+                                className="w-12 h-12 rounded-xl flex items-center justify-center"
+                                style={{ background: gradientColors.primary }}
+                            >
+                                <Sparkles className="w-6 h-6 text-white" />
                             </div>
                             <div>
                                 <p className="text-sm text-gray-500">Pending Points</p>
@@ -332,7 +336,7 @@ export default function StakingPage() {
                                 id="claim-button"
                                 onClick={handleClaim}
                                 disabled={isClaimPending}
-                                className="w-full mt-3 py-2 rounded-lg bg-green-500 text-white text-sm font-medium hover:bg-green-600 transition-colors disabled:opacity-50"
+                                className="w-full mt-3 py-2 rounded-lg bg-[#14279B] text-white text-sm font-medium hover:bg-[#3D56B2] transition-colors disabled:opacity-50"
                             >
                                 {isClaimPending ? 'Claiming...' : 'Claim Points'}
                             </button>
@@ -340,8 +344,11 @@ export default function StakingPage() {
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg">
                         <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                                <TrendingUp className="w-6 h-6 text-purple-600" />
+                            <div
+                                className="w-12 h-12 rounded-xl flex items-center justify-center"
+                                style={{ background: gradientColors.primary }}
+                            >
+                                <TrendingUp className="w-6 h-6 text-white" />
                             </div>
                             <div>
                                 <p className="text-sm text-gray-500">APY Rate</p>

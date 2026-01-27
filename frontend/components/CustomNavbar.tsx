@@ -29,9 +29,10 @@ const CustomNavbar: React.FC = () => {
             {[
               { href: '/', label: 'Home' },
               { href: '/explore', label: 'Events' },
+              { href: '/tickets', label: 'My Tickets' },
               { href: '/create', label: 'Create' },
               { href: '/staking', label: 'Staking' },
-              { href: '/governance', label: 'Governance' },
+              { href: '/governance', label: 'Community' },
               { href: '/dashboard', label: 'Dashboard' },
               { href: '/profile', label: 'Profile' },
             ].map((link) => (
@@ -77,9 +78,10 @@ const CustomNavbar: React.FC = () => {
           <div className="md:hidden mt-4 pb-4 space-y-4">
             <a href="/" className="block text-gray-700 dark:text-gray-300 hover:text-primary-400 transition-colors">Home</a>
             <a href="/explore" className="block text-gray-700 dark:text-gray-300 hover:text-primary-400 transition-colors">Events</a>
+            <a href="/tickets" className="block text-gray-700 dark:text-gray-300 hover:text-primary-400 transition-colors">My Tickets</a>
             <a href="/create" className="block text-gray-700 dark:text-gray-300 hover:text-primary-400 transition-colors">Create</a>
             <a href="/staking" className="block text-gray-700 dark:text-gray-300 hover:text-primary-400 transition-colors">Staking</a>
-            <a href="/governance" className="block text-gray-700 dark:text-gray-300 hover:text-primary-400 transition-colors">Governance</a>
+            <a href="/governance" className="block text-gray-700 dark:text-gray-300 hover:text-primary-400 transition-colors">Community</a>
             <a href="/dashboard" className="block text-gray-700 dark:text-gray-300 hover:text-primary-400 transition-colors">Dashboard</a>
             <div className="pt-4 flex justify-between items-center">
               <div className="flex items-center gap-4 w-full justify-between">

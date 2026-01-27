@@ -15,6 +15,7 @@ export const EVENT_FACTORY_ABI = [
             { name: 'description', type: 'string' },
             { name: 'location', type: 'string' },
             { name: 'imageUri', type: 'string' },
+            { name: 'badgeUri', type: 'string' },
             { name: 'date', type: 'uint256' },
             { name: 'price', type: 'uint256' },
             { name: 'maxTickets', type: 'uint256' },
@@ -48,6 +49,7 @@ export const EVENT_FACTORY_ABI = [
             { name: 'description', type: 'string' },
             { name: 'location', type: 'string' },
             { name: 'imageUri', type: 'string' },
+            { name: 'badgeUri', type: 'string' },
             { name: 'date', type: 'uint256' },
             { name: 'price', type: 'uint256' },
             { name: 'maxTickets', type: 'uint256' },
@@ -292,7 +294,7 @@ export function useCreateEvent() {
     const { writeContract, data: hash, isPending, error } = useWriteContract();
     const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
-    const createEvent = async (name: string, description: string, location: string, imageUri: string, date: Date, priceInIDRX: number, maxTickets: number) => {
+    const createEvent = async (name: string, description: string, location: string, imageUri: string, badgeUri: string, date: Date, priceInIDRX: number, maxTickets: number) => {
         const timestamp = Math.floor(date.getTime() / 1000);
         const priceWei = parseEther(priceInIDRX.toString());
 
@@ -305,6 +307,7 @@ export function useCreateEvent() {
                 description,
                 location,
                 imageUri,
+                badgeUri,
                 BigInt(timestamp),
                 priceWei,
                 BigInt(maxTickets)
@@ -380,12 +383,13 @@ export function useEventDetails(eventId: number) {
             description: result.data[1],
             location: result.data[2],
             imageUri: result.data[3],
-            date: new Date(Number(result.data[4]) * 1000),
-            price: result.data[5],
-            maxTickets: Number(result.data[6]),
-            soldTickets: Number(result.data[7]),
-            organizer: result.data[8],
-            isActive: result.data[9],
+            badgeUri: result.data[4], // New field
+            date: new Date(Number(result.data[5]) * 1000),
+            price: result.data[6],
+            maxTickets: Number(result.data[7]),
+            soldTickets: Number(result.data[8]),
+            organizer: result.data[9],
+            isActive: result.data[10],
         } : null,
         isLoading: result.isLoading,
         error: result.error,
@@ -648,7 +652,8 @@ export function useProfileCollection(userAddress?: `0x${string}`) {
                     description: details[1],
                     location: details[2],
                     image: details[3],
-                    eventDate: new Date(Number(details[4]) * 1000).toISOString(),
+                    badgeImage: details[4], // New field
+                    eventDate: new Date(Number(details[5]) * 1000).toISOString(), // Shifted index
                 };
 
                 if (hasTicket) {
@@ -664,8 +669,8 @@ export function useProfileCollection(userAddress?: `0x${string}`) {
                     poaps.push({
                         id: i,
                         eventName: details[0],
-                        date: new Date(Number(details[4]) * 1000).toISOString(),
-                        image: details[3],
+                        date: new Date(Number(details[5]) * 1000).toISOString(), // Shifted index
+                        image: details[4] || details[3], // Prefer badgeImage, fallback to eventImage
                         tokenId: i,
                     });
                 }

@@ -38,6 +38,7 @@ export default function CreateEventPage() {
         maxTickets: '',
         price: '0',
         imageUrl: '',
+        badgeImageUrl: '',
         isPaid: false,
     });
 
@@ -164,6 +165,7 @@ export default function CreateEventPage() {
                 formData.description,
                 formData.location,
                 formData.imageUrl,
+                formData.badgeImageUrl, // Pass new field
                 dateTime,
                 priceAsNumber,
                 Number(formData.maxTickets || 100)
@@ -221,6 +223,7 @@ export default function CreateEventPage() {
                 maxTickets: '',
                 price: '0',
                 imageUrl: '',
+                badgeImageUrl: '',
                 isPaid: false,
             });
 
@@ -433,6 +436,25 @@ export default function CreateEventPage() {
                                     placeholder="https://..."
                                     className="w-full px-4 py-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:border-[#5C7AEA] transition-all duration-300 outline-none"
                                 />
+                            </div>
+
+                            {/* Badge Image URL */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                                    <Sparkles className="w-4 h-4 text-purple-600" />
+                                    Badge Image URL (Optional)
+                                </label>
+                                <input
+                                    type="url"
+                                    name="badgeImageUrl"
+                                    value={formData.badgeImageUrl}
+                                    onChange={handleChange}
+                                    placeholder="https://... (Leave empty to use Event Image)"
+                                    className="w-full px-4 py-4 rounded-xl border-2 border-purple-200 dark:border-purple-900/50 bg-purple-50/50 dark:bg-purple-900/10 focus:border-purple-500 transition-all duration-300 outline-none"
+                                />
+                                <p className="text-xs text-gray-500 mt-2">
+                                    This image will be used for the POAP badge.
+                                </p>
                             </div>
 
                             {/* Features Info */}

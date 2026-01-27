@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useCheckIn } from '@/hooks/useContracts';
 import { useToast } from '@/context/ToastContext';
+import Confetti from '@/components/Confetti';
 
 interface CheckInResult {
     success: boolean;
@@ -39,6 +40,7 @@ export default function CheckInPage() {
     const [isMuted, setIsMuted] = useState(false);
     const [checkInHistory, setCheckInHistory] = useState<CheckInResult[]>([]);
     const [stats, setStats] = useState({ checkedIn: 0, total: 100 });
+    const [showConfetti, setShowConfetti] = useState(false);
     const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
     const { showToast } = useToast();
@@ -102,7 +104,7 @@ export default function CheckInPage() {
             const attendeeAddress: string =
                 data.walletAddress || decodedText.slice(0, 10) + '...';
 
-            // Optional: pastikan eventId di QR cocok dengan eventId URL
+            // Optional: match eventId in QR with URL
             if (data.eventId && String(data.eventId) !== String(eventIdParam)) {
                 const result: CheckInResult = {
                     success: false,
@@ -115,7 +117,7 @@ export default function CheckInPage() {
                 return;
             }
 
-            // Panggil kontrak untuk check-in dan mint POAP
+            // Call contract to check-in and mint POAP
             await checkIn(eventIdNumber, attendeeAddress);
 
             const result: CheckInResult = {
@@ -129,6 +131,9 @@ export default function CheckInPage() {
                 const audio = new Audio('/sounds/success.mp3');
                 audio.play().catch(() => { });
             }
+
+            setShowConfetti(true);
+            setTimeout(() => setShowConfetti(false), 5000);
 
             showToast('Check-in Successful', 'success', `POAP Minted for ${attendeeAddress.slice(0, 6)}...`);
             setCheckInHistory(prev => [result, ...prev]);
@@ -155,6 +160,9 @@ export default function CheckInPage() {
                     audio.play().catch(() => { });
                 }
 
+                setShowConfetti(true);
+                setTimeout(() => setShowConfetti(false), 5000);
+
                 showToast('Check-in Successful', 'success', `Verified ${attendeeAddress.slice(0, 6)}...`);
                 setCheckInHistory(prev => [result, ...prev]);
                 setStats(prev => ({ ...prev, checkedIn: prev.checkedIn + 1 }));
@@ -177,7 +185,7 @@ export default function CheckInPage() {
             const file = e.target.files[0];
 
             try {
-                // Use the library's file scanner. We use a separate instance ID to avoid conflict with the interactive scanner.
+                // Use the library's file scanner.
                 const scanner = new Html5Qrcode("qr-reader-temp");
 
                 const decodedText = await scanner.scanFileV2(file);
@@ -212,7 +220,7 @@ export default function CheckInPage() {
 
     useEffect(() => {
         if (isSuccess && txHash) {
-            console.log('Check-in tx confirmed:', txHash);
+            // Check-in confirmed
         }
     }, [isSuccess, txHash]);
 
@@ -321,7 +329,7 @@ export default function CheckInPage() {
                                 </div>
                             ) : (
                                 <div className="relative">
-                                    <div id="qr-reader" className="rounded-2xl overflow-hidden" />
+                                    <div id="qr-reader" className="rounded-2xl overflow-hidden border-4 border-[#14279B]/50 shadow-[0_0_15px_rgba(20,39,155,0.5)] animate-pulse" />
                                     <div className="flex justify-center gap-4 mt-4">
                                         <button
                                             onClick={stopScanning}
@@ -434,6 +442,7 @@ export default function CheckInPage() {
             </main >
 
             <CustomFooter />
+            {showConfetti && <Confetti trigger={showConfetti} />}
         </div >
     );
 }

@@ -8,9 +8,9 @@ import AnimatedCounter from '@/components/AnimatedCounter';
 import EmptyState from '@/components/EmptyState';
 import { StatCardSkeleton } from '@/components/LoadingSkeleton';
 import {
-    Calendar, Users, Ticket, DollarSign, TrendingUp,
+    Calendar, Users, Ticket, TrendingUp,
     QrCode, Award, Settings, Plus, Eye,
-    CheckCircle, AlertCircle, Loader2
+    CheckCircle, AlertCircle, Loader2, Coins
 } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { useMyEvents, useCheckIn } from '@/hooks/useContracts';
@@ -39,17 +39,18 @@ export default function DashboardPage() {
         // Basic stats aggregation
         const totalAttendees = myEvents.reduce((acc, curr) => acc + (curr.soldTickets || 0), 0);
 
-        // Revenue estimation (rough)
-        // Warning: precision loss if we sum formatted strings, but here we just sum sold count for now
-        // Or if we want revenue we need Check info.
-        // Assuming price is constant per event.
-        // Total IDRX potential revenue?
-        // Let's keep it simple.
+        // Revenue estimation
+        let totalRev = BigInt(0);
+        myEvents.forEach(e => {
+            const sold = BigInt(e.soldTickets || 0);
+            const price = BigInt(e.price || 0);
+            totalRev += sold * price;
+        });
 
         return {
             totalEvents,
             totalAttendees: totalAttendees,
-            totalRevenue: 0, // Placeholder as we shouldn't sum BigInts loosely here without proper handling
+            totalRevenue: formatEther(totalRev), // Returns string like "1.5"
             totalPOAPs: totalAttendees, // 1 POAP per attendee check-in ideal
         };
     }, [myEvents]);
@@ -163,7 +164,7 @@ export default function DashboardPage() {
                             {[
                                 { icon: Calendar, label: 'My Events', value: stats.totalEvents, color: '#14279B' },
                                 { icon: Users, label: 'Tickets Sold', value: stats.totalAttendees, color: '#3D56B2' },
-                                { icon: DollarSign, label: 'Revenue', value: '-', color: '#5C7AEA' }, // Placeholder
+                                { icon: Coins, label: 'Revenue', value: `${Number(stats.totalRevenue).toLocaleString('id-ID')} IDRX`, color: '#5C7AEA' },
                                 { icon: Award, label: 'Possible POAPs', value: stats.totalPOAPs, color: '#7C3AED' },
                             ].map((stat, i) => (
                                 <div
@@ -172,9 +173,9 @@ export default function DashboardPage() {
                                 >
                                     <div
                                         className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
-                                        style={{ backgroundColor: `${stat.color}15` }}
+                                        style={{ background: gradientColors.primary }}
                                     >
-                                        <stat.icon className="w-6 h-6" style={{ color: stat.color }} />
+                                        <stat.icon className="w-6 h-6 text-white" />
                                     </div>
                                     <div className="text-3xl font-bold mb-1" style={{ color: stat.color }}>
                                         {stat.value}
@@ -238,7 +239,7 @@ export default function DashboardPage() {
                                                 </span>
                                                 {/* Note: Price is likely 0 or IDRX amount */}
                                                 <span className="flex items-center gap-1">
-                                                    <DollarSign className="w-4 h-4" />
+                                                    <Coins className="w-4 h-4" />
                                                     {event.price && BigInt(event.price) > BigInt(0) ? `${formatEther(event.price)} IDRX` : 'Free'}
                                                 </span>
                                                 <span className="flex items-center gap-1">

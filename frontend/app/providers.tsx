@@ -64,6 +64,32 @@ function InnerProviders({ children }: { children: React.ReactNode }) {
 
     React.useEffect(() => {
         setMounted(true);
+        // Suppress benign warnings in development
+        if (process.env.NODE_ENV === 'development') {
+            const originalWarn = console.warn;
+            const originalError = console.error;
+
+            console.warn = (...args) => {
+                if (
+                    typeof args[0] === 'string' &&
+                    (args[0].includes('WalletConnect Core is already initialized') ||
+                        args[0].includes('Multiple versions of Lit loaded'))
+                ) {
+                    return;
+                }
+                originalWarn(...args);
+            };
+
+            console.error = (...args) => {
+                if (
+                    typeof args[0] === 'string' &&
+                    (args[0].includes('WalletConnect Core is already initialized'))
+                ) {
+                    return;
+                }
+                originalError(...args);
+            };
+        }
     }, []);
 
     // Determine OnchainKit mode based on next-themes
