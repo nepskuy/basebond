@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import CustomNavbar from '@/components/CustomNavbar';
 import CustomFooter from '@/components/CustomFooter';
-import { Html5QrcodeScanner, Html5Qrcode } from 'html5-qrcode';
+import { Html5QrcodeScanner, Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import {
     QrCode,
     CheckCircle,
@@ -72,6 +72,8 @@ export default function CheckInPage() {
                             facingMode: "environment",
                             focusMode: "continuous" // Attempt to force continuous focus
                         } as any,
+                        formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+                        disableFlip: false,
                         // Experimental feature for better performance on mobile
                         useBarCodeDetectorIfSupported: true,
                     },
@@ -172,8 +174,15 @@ export default function CheckInPage() {
                 showToast('Check-in Successful', 'success', `Verified ${attendeeAddress.slice(0, 6)}...`);
                 setCheckInHistory(prev => [result, ...prev]);
                 setStats(prev => ({ ...prev, checkedIn: prev.checkedIn + 1 }));
-            } catch (err) {
+            } catch (err: any) {
                 console.error('Failed to check in attendee', err);
+
+                // Ignored user rejection
+                if (err.message && (err.message.includes('User rejected') || err.message.includes('User denied'))) {
+                    showToast('Transation Cancelled', 'warning', 'You cancelled the check-in request');
+                    return;
+                }
+
                 const result: CheckInResult = {
                     success: false,
                     address: attendeeAddress,
@@ -220,6 +229,11 @@ export default function CheckInPage() {
 
     useEffect(() => {
         if (error) {
+            // Ignore user rejection errors
+            if (error.message && (error.message.includes('User rejected') || error.message.includes('User denied'))) {
+                showToast('Transaction Cancelled', 'info', 'Check-in request was cancelled');
+                return;
+            }
             showToast('Check-in Error', 'error', error.message ?? 'Onchain check-in failed');
         }
     }, [error, showToast]);
