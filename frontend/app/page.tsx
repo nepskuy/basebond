@@ -11,6 +11,9 @@ import CustomFooter from '@/components/CustomFooter';
 import Tilt from 'react-parallax-tilt';
 import { motion, useScroll, useTransform } from 'framer-motion';
 
+
+import FAQ from '@/components/FAQ';
+
 // --- VISUAL COMPONENTS ---
 
 const MeshGradientBackground = () => (
@@ -39,6 +42,24 @@ const FloatingBadge = ({ children, delay = 0, x, y = 0, right }: { children: Rea
     </motion.div>
   </motion.div>
 );
+
+const TokenIcon = (props: any) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M12 2L2 7l10 5 10-5-10-5Z" />
+    <path d="m2 17 10 5 10-5" />
+    <path d="m2 12 10 5 10-5" />
+  </svg>
+);
+
 
 const BentoItem = ({
   children,
@@ -234,14 +255,14 @@ export default function LandingPage() {
             <BentoItem
               title="Instant Settlement"
               subtitle="Get paid instantly in IDRX or USDC. No waiting weeks for payouts."
-              icon={DollarSign}
+              icon={TokenIcon}
               delay={0.2}
             />
 
             {/* Side Feature 2 */}
             <BentoItem
-              title="Community Logic"
-              subtitle="Reward loyalty with on-chain reputation points and unlockable perks."
+              title="Auto Rewards"
+              subtitle="Attendees automatically earn loyalty points and POAPs just by checking in. No manual work needed."
               icon={Users}
               delay={0.4}
             />
@@ -300,6 +321,9 @@ export default function LandingPage() {
             ))}
           </div>
         </section>
+
+        {/* --- FAQ SECTION --- */}
+        <FAQ />
 
         {/* --- CTA --- */}
         <section className="py-20 px-6">

@@ -21,7 +21,8 @@ const jakarta = Plus_Jakarta_Sans({
 // ... existing metadata ...
 export const metadata: Metadata = {
   title: "BaseBond | Event-to-Community Protocol",
-  description: "Web3 Event Engagement Platform on Base. Create events, sell NFT tickets, and reward community loyalty.",
+  description: "The easiest way to create on-chain events on Base. Sell NFT tickets, settle instantly in stablecoins, and reward attendees automatically.",
+  keywords: ["Base", "Hackathon", "Ticketing", "NFT", "Event", "Web3", "Crypto", "Stablecoin"], // Added keywords
   icons: {
     icon: '/Base.jpg',
   },
