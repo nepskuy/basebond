@@ -10,11 +10,121 @@ import { StatCardSkeleton } from '@/components/LoadingSkeleton';
 import {
     Calendar, Users, Ticket, TrendingUp,
     QrCode, Award, Settings, Plus, Eye,
-    CheckCircle, AlertCircle, Loader2, Coins
+    CheckCircle, AlertCircle, Loader2, Coins, ArrowRight
 } from 'lucide-react';
 import { useAccount } from 'wagmi';
-import { useMyEvents, useCheckIn } from '@/hooks/useContracts';
+import { useMyEvents, useCheckIn, useEventCheckInStats } from '@/hooks/useContracts';
 import { formatEther } from 'viem';
+import Link from 'next/link';
+
+// extracted component to allow hook usage per event
+const EventCard = ({ event, onManage, onCheckInSelect }: { event: any, onManage: () => void, onCheckInSelect: () => void }) => {
+    const { checkInCount, isLoading: isCountLoading } = useEventCheckInStats(event.id);
+
+    const gradientColors = {
+        primary: 'linear-gradient(135deg, #14279B 0%, #3D56B2 50%, #5C7AEA 100%)',
+    };
+
+    return (
+        <div
+            className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300"
+        >
+            <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+                {/* Image thumbnail if available */}
+                {event.imageUri ? (
+                    <div className="w-full lg:w-32 h-32 rounded-xl overflow-hidden flex-shrink-0">
+                        <img src={event.imageUri} alt={event.name} className="w-full h-full object-cover" />
+                    </div>
+                ) : (
+                    <div className="w-full lg:w-32 h-32 rounded-xl flex items-center justify-center bg-gray-100 dark:bg-gray-700 flex-shrink-0">
+                        <Calendar className="w-8 h-8 text-gray-400" />
+                    </div>
+                )}
+
+                <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-xl font-bold">{event.name}</h3>
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${event.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                            {event.isActive ? 'Active' : 'Ended'}
+                        </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                        <span className="flex items-center gap-1">
+                            <Calendar className="w-4 h-4" />
+                            {event.date ? event.date.toLocaleDateString() : 'TBA'}
+                        </span>
+                        <span className="flex items-center gap-1">
+                            <Coins className="w-4 h-4" />
+                            {event.price && BigInt(event.price) > BigInt(0) ? `${formatEther(event.price)} IDRX` : 'Free'}
+                        </span>
+                        <span className="flex items-center gap-1">
+                            <Users className="w-4 h-4" />
+                            {event.soldTickets}/{event.maxTickets} Sold
+                        </span>
+                        {/* Check-in Count Display */}
+                        <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium">
+                            <CheckCircle className="w-4 h-4" />
+                            {isCountLoading ? '...' : checkInCount} Checked In
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+                    <a
+                        href={`/event/${event.id}`}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 transition-colors"
+                    >
+                        <Eye className="w-4 h-4" />
+                        View
+                    </a>
+                    {event.isActive && (
+                        <Link
+                            href={`/checkin/${event.id}`}
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl text-white transition-all duration-300 hover:scale-105"
+                            style={{ background: gradientColors.primary }}
+                        >
+                            <QrCode className="w-4 h-4" />
+                            Scanner Tool
+                        </Link>
+                    )}
+                    <button
+                        onClick={onManage}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                        <Settings className="w-4 h-4" />
+                        Manage
+                    </button>
+                    {event.isActive && (
+                        <button
+                            onClick={onCheckInSelect}
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/40 transition-colors text-xs"
+                        >
+                            <ArrowRight className="w-4 h-4" />
+                            Manual Entry
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="mt-4">
+                <div className="flex justify-between text-sm mb-2">
+                    <span className="text-gray-500">Ticket Sales</span>
+                    <span className="font-medium">{event.maxTickets > 0 ? Math.round((event.soldTickets / event.maxTickets) * 100) : 0}%</span>
+                </div>
+                <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                            width: `${event.maxTickets > 0 ? (event.soldTickets / event.maxTickets) * 100 : 0}%`,
+                            background: gradientColors.primary
+                        }}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+};
 
 export default function DashboardPage() {
     const { address } = useAccount();
@@ -209,91 +319,18 @@ export default function DashboardPage() {
                             />
                         ) : (
                             myEvents.map(event => (
-                                <div
+                                <EventCard
                                     key={event.id}
-                                    className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300"
-                                >
-                                    <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-                                        {/* Image thumbnail if available */}
-                                        {event.imageUri ? (
-                                            <div className="w-full lg:w-32 h-32 rounded-xl overflow-hidden flex-shrink-0">
-                                                <img src={event.imageUri} alt={event.name} className="w-full h-full object-cover" />
-                                            </div>
-                                        ) : (
-                                            <div className="w-full lg:w-32 h-32 rounded-xl flex items-center justify-center bg-gray-100 dark:bg-gray-700 flex-shrink-0">
-                                                <Calendar className="w-8 h-8 text-gray-400" />
-                                            </div>
-                                        )}
-
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <h3 className="text-xl font-bold">{event.name}</h3>
-                                                <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${event.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                                    {event.isActive ? 'Active' : 'Ended'}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center gap-4 text-sm text-gray-500">
-                                                <span className="flex items-center gap-1">
-                                                    <Calendar className="w-4 h-4" />
-                                                    {event.date ? event.date.toLocaleDateString() : 'TBA'}
-                                                </span>
-                                                {/* Note: Price is likely 0 or IDRX amount */}
-                                                <span className="flex items-center gap-1">
-                                                    <Coins className="w-4 h-4" />
-                                                    {event.price && BigInt(event.price) > BigInt(0) ? `${formatEther(event.price)} IDRX` : 'Free'}
-                                                </span>
-                                                <span className="flex items-center gap-1">
-                                                    <Users className="w-4 h-4" />
-                                                    {event.soldTickets}/{event.maxTickets} Sold
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex flex-wrap gap-3">
-                                            <a
-                                                href={`/event/${event.id}`}
-                                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 transition-colors"
-                                            >
-                                                <Eye className="w-4 h-4" />
-                                                View
-                                            </a>
-                                            {event.isActive && (
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedEventId(event.id.toString());
-                                                        setActiveTab('checkin');
-                                                    }}
-                                                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-white transition-all duration-300 hover:scale-105"
-                                                    style={{ background: gradientColors.primary }}
-                                                >
-                                                    <QrCode className="w-4 h-4" />
-                                                    Check-in Tool
-                                                </button>
-                                            )}
-                                            <button className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-600 hover:bg-gray-50 transition-colors">
-                                                <Settings className="w-4 h-4" />
-                                                Manage
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Progress Bar */}
-                                    <div className="mt-4">
-                                        <div className="flex justify-between text-sm mb-2">
-                                            <span className="text-gray-500">Ticket Sales</span>
-                                            <span className="font-medium">{event.maxTickets > 0 ? Math.round((event.soldTickets / event.maxTickets) * 100) : 0}%</span>
-                                        </div>
-                                        <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full rounded-full transition-all duration-500"
-                                                style={{
-                                                    width: `${event.maxTickets > 0 ? (event.soldTickets / event.maxTickets) * 100 : 0}%`,
-                                                    background: gradientColors.primary
-                                                }}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
+                                    event={event}
+                                    onManage={() => {
+                                        setSelectedEventId(event.id.toString());
+                                        setActiveTab('checkin');
+                                    }}
+                                    onCheckInSelect={() => {
+                                        setSelectedEventId(event.id.toString());
+                                        setActiveTab('checkin');
+                                    }}
+                                />
                             ))
                         )}
                     </div>
@@ -309,10 +346,11 @@ export default function DashboardPage() {
                                 >
                                     <QrCode className="w-10 h-10 text-[#14279B] dark:text-blue-400" />
                                 </div>
-                                <h2 className="text-2xl font-bold mb-2">Check-in Attendee</h2>
+                                <h2 className="text-2xl font-bold mb-2">Manual Check-in Tool</h2>
                                 <p className="text-gray-600 dark:text-gray-400">
                                     Manually validate tickets by entering attendee wallet address.
-                                    (QR Scanning requires 'react-qr-reader' dependency)
+                                    <br />
+                                    For QR Scanning, please use the <Link href={selectedEventId ? `/checkin/${selectedEventId}` : '#'} className="text-blue-600 hover:underline font-bold">Dedicated Scanner App</Link>.
                                 </p>
                             </div>
 

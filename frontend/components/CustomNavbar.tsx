@@ -1,18 +1,40 @@
 'use client';
 
 import React from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Droplets } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import WalletBalance from './WalletBalance';
 import { usePathname } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import WalletWrapper from './WalletWrapper';
 import TourGuide from './TourGuide';
+import { useRequestFaucet } from '@/hooks/useContracts';
+import { useToast } from '@/context/ToastContext';
 
 
 const CustomNavbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const pathname = usePathname();
+
+  const { requestFaucet, isLoading: isFaucetLoading, isSuccess: isFaucetSuccess, error: faucetError } = useRequestFaucet();
+  const { showToast } = useToast();
+
+  React.useEffect(() => {
+    if (isFaucetSuccess) {
+      showToast('Faucet Success', 'success', 'Received 1,000,000 Test IDRX!');
+    }
+    if (faucetError) {
+      showToast('Faucet Failed', 'error', faucetError.message.includes('Cooldown') ? 'Cooldown active (Wait 24h)' : 'Failed to get tokens');
+    }
+  }, [isFaucetSuccess, faucetError, showToast]);
+
+  const handleFaucet = async () => {
+    try {
+      await requestFaucet();
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 transition-colors duration-300">
@@ -32,7 +54,7 @@ const CustomNavbar: React.FC = () => {
               { href: '/tickets', label: 'My Tickets' },
               { href: '/create', label: 'Create' },
               { href: '/staking', label: 'Staking' },
-              { href: '/governance', label: 'Community' },
+              { href: '/community', label: 'Community Voice' },
               { href: '/dashboard', label: 'Dashboard' },
               { href: '/profile', label: 'Profile' },
             ].map((link) => (
@@ -52,6 +74,17 @@ const CustomNavbar: React.FC = () => {
 
           {/* Wallet Connect Button - Full OnchainKit Implementation */}
           <div className="hidden md:flex items-center space-x-4">
+            <button
+              onClick={handleFaucet}
+              disabled={isFaucetLoading}
+              className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors relative group"
+              title="Get Test IDRX (Faucet)"
+            >
+              <Droplets className={`w-5 h-5 ${isFaucetLoading ? 'animate-pulse' : ''}`} />
+              <span className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                Get Free IDRX
+              </span>
+            </button>
             <WalletBalance />
             <TourGuide />
             <ThemeToggle />
@@ -81,7 +114,7 @@ const CustomNavbar: React.FC = () => {
             <a href="/tickets" className="block text-gray-700 dark:text-gray-300 hover:text-primary-400 transition-colors">My Tickets</a>
             <a href="/create" className="block text-gray-700 dark:text-gray-300 hover:text-primary-400 transition-colors">Create</a>
             <a href="/staking" className="block text-gray-700 dark:text-gray-300 hover:text-primary-400 transition-colors">Staking</a>
-            <a href="/governance" className="block text-gray-700 dark:text-gray-300 hover:text-primary-400 transition-colors">Community</a>
+            <a href="/community" className="block text-gray-700 dark:text-gray-300 hover:text-primary-400 transition-colors">Community Voice</a>
             <a href="/dashboard" className="block text-gray-700 dark:text-gray-300 hover:text-primary-400 transition-colors">Dashboard</a>
             <div className="pt-4 flex justify-between items-center">
               <div className="flex items-center gap-4 w-full justify-between">

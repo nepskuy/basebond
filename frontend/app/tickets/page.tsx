@@ -14,7 +14,8 @@ import {
     QrCode,
     Loader2,
     Search,
-    Clock
+    Clock,
+    CheckCircle
 } from 'lucide-react';
 import Tilt from 'react-parallax-tilt';
 import Link from 'next/link';
@@ -147,7 +148,8 @@ export default function MyTicketsPage() {
                                                     <div className="relative h-48 overflow-hidden">
                                                         <img
                                                             src={ticket.image || 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30'}
-                                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                            className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 ${new Date(ticket.eventDate) < new Date() ? 'grayscale' : ''
+                                                                }`}
                                                             alt={ticket.eventName}
                                                         />
                                                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
@@ -163,12 +165,17 @@ export default function MyTicketsPage() {
                                                             </div>
                                                         </div>
 
-                                                        {ticket.used && (
-                                                            <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-medium flex items-center gap-1">
-                                                                <Clock className="w-3 h-3" />
+                                                        {ticket.used ? (
+                                                            <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-green-500/80 backdrop-blur-md border border-white/20 text-white text-xs font-medium flex items-center gap-1">
+                                                                <CheckCircle className="w-3 h-3" />
                                                                 Used
                                                             </div>
-                                                        )}
+                                                        ) : new Date(ticket.eventDate) < new Date() ? (
+                                                            <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-gray-500/80 backdrop-blur-md border border-white/20 text-white text-xs font-medium flex items-center gap-1">
+                                                                <Clock className="w-3 h-3" />
+                                                                Expired
+                                                            </div>
+                                                        ) : null}
                                                     </div>
 
                                                     {/* Details */}
@@ -187,10 +194,24 @@ export default function MyTicketsPage() {
                                                         {/* Action */}
                                                         <button
                                                             onClick={() => setSelectedTicket(ticket)}
-                                                            className="w-full py-3 rounded-xl font-semibold border-2 border-[#14279B]/10 dark:border-blue-500/20 text-[#14279B] dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all flex items-center justify-center gap-2"
+                                                            disabled={new Date(ticket.eventDate) < new Date() && !ticket.used} // Allow viewing used/expired just for history, or disable completely? User asked for "gabisa di apa2in" but "ada historynya".
+                                                            // Interpretation: They want to see it but not act on it. So disable the button or change text.
+                                                            className={`w-full py-3 rounded-xl font-semibold border-2 transition-all flex items-center justify-center gap-2 ${new Date(ticket.eventDate) < new Date()
+                                                                ? 'border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50'
+                                                                : 'border-[#14279B]/10 dark:border-blue-500/20 text-[#14279B] dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                                                                }`}
                                                         >
-                                                            <QrCode className="w-4 h-4" />
-                                                            Show QR Code
+                                                            {new Date(ticket.eventDate) < new Date() ? (
+                                                                <>
+                                                                    <Clock className="w-4 h-4" />
+                                                                    Event Ended
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <QrCode className="w-4 h-4" />
+                                                                    Show QR Code
+                                                                </>
+                                                            )}
                                                         </button>
                                                     </div>
                                                 </div>

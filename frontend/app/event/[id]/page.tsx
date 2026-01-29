@@ -54,13 +54,48 @@ export default function EventDetailPage() {
         [eventIdParam],
     );
 
-    const [hasPurchased, setHasPurchased] = useState(false);
-    const [isLiked, setIsLiked] = useState(false);
-
-    const [showConfetti, setShowConfetti] = useState(false);
-    const { showToast } = useToast();
     const { address } = useAccount();
+    const { showToast } = useToast();
     const { event, isLoading: isEventLoading, error: eventError } = useEventDetails(eventIdNumber);
+
+    // State
+    const [likeCount, setLikeCount] = useState(0);
+    const [isLiked, setIsLiked] = useState(false);
+    const [hasPurchased, setHasPurchased] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
+
+    // Like System Logic
+    useEffect(() => {
+        if (eventIdNumber === undefined) return;
+
+        // 1. Generate "Community" likes (Deterministic based on ID so it's consistent across refreshes)
+        // Formula: (ID * 17 + 42) % 300 + 50 -> Range 50 to 350
+        const baseLikes = (eventIdNumber * 17 + 42) % 300 + 50;
+
+        // 2. Check local storage
+        const savedLikes = JSON.parse(localStorage.getItem('basebond_liked_events') || '[]');
+        const userHasLiked = savedLikes.includes(eventIdNumber);
+
+        setIsLiked(userHasLiked);
+        setLikeCount(baseLikes + (userHasLiked ? 1 : 0));
+    }, [eventIdNumber]);
+
+    const handleLikeToggle = () => {
+        const newIsLiked = !isLiked;
+        setIsLiked(newIsLiked);
+        setLikeCount(prev => newIsLiked ? prev + 1 : prev - 1);
+
+        // Save to local storage
+        const savedLikes = JSON.parse(localStorage.getItem('basebond_liked_events') || '[]');
+        if (newIsLiked) {
+            if (!savedLikes.includes(eventIdNumber)) savedLikes.push(eventIdNumber);
+        } else {
+            const index = savedLikes.indexOf(eventIdNumber);
+            if (index > -1) savedLikes.splice(index, 1);
+        }
+        localStorage.setItem('basebond_liked_events', JSON.stringify(savedLikes));
+    };
+
     const {
         buyTicket,
         isLoading: isPurchasing,
@@ -211,15 +246,20 @@ export default function EventDetailPage() {
 
                     {/* Actions */}
                     <div className="absolute top-4 right-4 flex gap-2">
-                        <button
-                            onClick={() => setIsLiked(!isLiked)}
-                            className={`p-3 rounded-full backdrop-blur-md transition-all duration-300 ${isLiked
-                                ? 'bg-red-500 text-white'
-                                : 'bg-white/20 text-white hover:bg-white/30'
-                                }`}
-                        >
-                            <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
-                        </button>
+                        <div className="flex flex-col items-center gap-1">
+                            <button
+                                onClick={handleLikeToggle}
+                                className={`group p-3 rounded-full backdrop-blur-md transition-all duration-300 ${isLiked
+                                    ? 'bg-red-500 text-white shadow-lg shadow-red-500/30 scale-110'
+                                    : 'bg-white/20 text-white hover:bg-white/30 hover:scale-105'
+                                    }`}
+                            >
+                                <Heart className={`w-5 h-5 transition-transform duration-300 ${isLiked ? 'fill-current animate-[ping_0.3s_ease-in-out_reverse]' : 'group-hover:scale-110'}`} />
+                            </button>
+                            <span className="text-white text-xs font-bold drop-shadow-md">
+                                {likeCount}
+                            </span>
+                        </div>
 
                         {/* Warpcast Share */}
 

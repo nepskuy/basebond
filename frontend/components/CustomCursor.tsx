@@ -48,13 +48,16 @@ export default function CustomCursor() {
 
         // Detect modal/dialog presence
         const checkForModal = () => {
-            // Check for common modal/dialog selectors
+            // Check for common modal/dialog selectors and specific wallet overlays
             const hasModal =
                 document.querySelector('[role="dialog"]') ||
                 document.querySelector('[role="alertdialog"]') ||
                 document.querySelector('.modal') ||
                 document.querySelector('[data-radix-portal]') || // RainbowKit uses Radix
-                document.querySelector('[data-headlessui-portal]');
+                document.querySelector('[data-headlessui-portal]') ||
+                document.querySelector('iframe') || // Wallet popups often use iframes
+                document.querySelector('[class*="coinbase"]') || // Coinbase specific
+                document.querySelector('[id*="cb-"]'); // Coinbase specific
 
             setIsModalOpen(!!hasModal);
         };
@@ -65,6 +68,9 @@ export default function CustomCursor() {
             childList: true,
             subtree: true,
         });
+
+        // Also check on interval as backup for iframes/shadow DOMs that might not trigger mutation on body immediately
+        const interval = setInterval(checkForModal, 500);
 
         window.addEventListener('mousemove', moveCursor);
         window.addEventListener('mousedown', handleMouseDown);
@@ -78,6 +84,7 @@ export default function CustomCursor() {
             window.removeEventListener('mouseover', handleMouseOver);
             mediaQuery.removeEventListener('change', handleResize);
             observer.disconnect();
+            clearInterval(interval);
         };
     }, [mouseX, mouseY]);
 
@@ -95,7 +102,7 @@ export default function CustomCursor() {
 
             {/* Main Dot - No Spring (Instant response) */}
             <motion.div
-                className="fixed top-0 left-0 w-3 h-3 bg-[#14279B] dark:bg-white rounded-full pointer-events-none z-[9999]"
+                className="fixed top-0 left-0 w-3 h-3 bg-[#14279B] dark:bg-white rounded-full pointer-events-none z-[2147483647]"
                 style={{
                     x: mouseX,
                     y: mouseY,
@@ -107,7 +114,7 @@ export default function CustomCursor() {
 
             {/* Trailing Ring - Spring Animation */}
             <motion.div
-                className="fixed top-0 left-0 w-8 h-8 rounded-full border border-[#14279B] dark:border-white pointer-events-none z-[9998] opacity-50"
+                className="fixed top-0 left-0 w-8 h-8 rounded-full border border-[#14279B] dark:border-white pointer-events-none z-[2147483646] opacity-50"
                 style={{
                     x: springX,
                     y: springY,

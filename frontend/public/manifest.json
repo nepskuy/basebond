@@ -1,0 +1,21 @@
+{
+    "name": "BaseBond",
+    "short_name": "BaseBond",
+    "description": "Web3 Event Engagement Protocol on Base",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#14279B",
+    "icons": [
+        {
+            "src": "/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

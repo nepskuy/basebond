@@ -301,3 +301,18 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Customized HTML5 Reader styles for spacing */
+#qr-reader img {
+    margin-bottom: 24px;
+}
+
+#qr-reader a {
+    margin-top: 16px;
+    display: inline-block;
+}
+
+#qr-reader__dashboard_section_csr span {
+     margin-top: 16px;
+     display: block;
+}

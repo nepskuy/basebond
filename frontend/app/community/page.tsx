@@ -242,7 +242,7 @@ export default function GovernancePage() {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex gap-4 mb-8">
+                <div className="flex gap-4 mb-8 overflow-x-auto pb-2 scrollbar-hide">
                     <button
                         onClick={() => setActiveTab('proposals')}
                         className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${activeTab === 'proposals'

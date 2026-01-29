@@ -28,7 +28,7 @@ export const TicketQR: React.FC<TicketQRProps> = ({
     });
 
     const downloadQR = () => {
-        const svg = document.getElementById('ticket-qr-svg');
+        const svg = document.getElementById('ticket-qr-svg')?.querySelector('svg');
         if (!svg) return;
 
         const svgData = new XMLSerializer().serializeToString(svg);
@@ -36,11 +36,15 @@ export const TicketQR: React.FC<TicketQRProps> = ({
         const ctx = canvas.getContext('2d');
         const img = new Image();
 
+        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+
         img.onload = () => {
             canvas.width = size * 2;
             canvas.height = size * 2;
 
             if (ctx) {
+                // Fill white background
                 ctx.fillStyle = 'white';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(img, 0, 0, size * 2, size * 2);
@@ -49,10 +53,13 @@ export const TicketQR: React.FC<TicketQRProps> = ({
             const link = document.createElement('a');
             link.download = `basebond-ticket-${ticketId}.png`;
             link.href = canvas.toDataURL('image/png');
+            document.body.appendChild(link);
             link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
         };
 
-        img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+        img.src = url;
     };
 
     const shareQR = async () => {

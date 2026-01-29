@@ -16,7 +16,7 @@ import {
     AlertCircle,
     CheckCircle,
 } from 'lucide-react';
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useBalance } from 'wagmi';
 import { useTokenAllowance, useApproveToken, CONTRACTS } from '@/hooks/useContracts';
 import { parseEther, formatEther } from 'viem';
 
@@ -136,6 +136,18 @@ export default function StakingPage() {
         address: STAKING_ADDRESS,
         abi: STAKING_ABI,
         functionName: 'minStakeAmount',
+    });
+
+    // Base rate for Points calculation (assuming 1 Token = 1 Point/Day roughly for projection example, adjusted by contract rate)
+    // The contract returns pointsPerTokenPerDay, let's use that for accurate projection.
+    // If contract returns 100, it means 100 points per 1e18 tokens per day? Or 1 point per ??
+    // Standard logic: (Amount * Rate * Time) / Scale.
+    // Let's assume Rate is simply points per token per day for now or use a safe default if 0.
+    const BASE_RATE = pointsPerDay ? Number(pointsPerDay) : 100; // fallback to 100 if undefined
+
+    const { data: balanceData } = useBalance({
+        address: address,
+        token: CONTRACTS.idrxToken
     });
 
     // Write functions
@@ -383,9 +395,14 @@ export default function StakingPage() {
                         ) : (
                             <>
                                 <div className="mb-6">
-                                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                        Amount to Stake
-                                    </label>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                            Amount to Stake
+                                        </label>
+                                        <div className="text-xs text-gray-500">
+                                            Available: <span className="font-mono font-medium text-[#14279B] dark:text-blue-400">{balanceData ? Number(formatEther(balanceData.value)).toLocaleString() : '0'}</span> IDRX
+                                        </div>
+                                    </div>
                                     <div className="relative">
                                         <input
                                             type="number"
@@ -394,21 +411,57 @@ export default function StakingPage() {
                                             placeholder="0.00"
                                             min="0"
                                             step="any"
-                                            className="w-full px-4 py-4 pr-20 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:border-green-500 transition-all duration-300 outline-none text-xl"
+                                            className="w-full px-4 py-4 pr-24 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:border-green-500 transition-all duration-300 outline-none text-xl"
                                         />
-                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">
-                                            IDRX
-                                        </span>
+                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                                            <span className="text-gray-500 font-medium text-sm">IDRX</span>
+                                            <button
+                                                onClick={() => setStakeAmount(balanceData ? formatEther(balanceData.value) : '0')}
+                                                className="px-2 py-1 text-xs font-bold text-green-600 bg-green-100 rounded-lg hover:bg-green-200 transition-colors"
+                                            >
+                                                MAX
+                                            </button>
+                                        </div>
                                     </div>
                                     <p className="mt-2 text-sm text-gray-500">
                                         Min stake: {minStake ? formatAmount(minStake) : '1'} IDRX
                                     </p>
                                 </div>
 
+                                {/* Projections Card */}
+                                {stakeAmount && Number(stakeAmount) > 0 && (
+                                    <div className="mb-6 p-4 rounded-xl bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/30 animate-in fade-in zoom-in duration-300">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <TrendingUp className="w-4 h-4 text-green-600" />
+                                            <span className="text-sm font-bold text-green-700 dark:text-green-400 uppercase tracking-wider">Estimated Earnings</span>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            <div className="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-green-100 dark:border-green-900/20 text-center">
+                                                <p className="text-[10px] uppercase text-gray-400 font-semibold mb-1">Daily</p>
+                                                <p className="font-bold text-green-600 dark:text-green-400 text-sm">
+                                                    +{((Number(stakeAmount) * BASE_RATE) / 100).toLocaleString(undefined, { maximumFractionDigits: 1 })} pts
+                                                </p>
+                                            </div>
+                                            <div className="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-green-100 dark:border-green-900/20 text-center">
+                                                <p className="text-[10px] uppercase text-gray-400 font-semibold mb-1">Monthly</p>
+                                                <p className="font-bold text-green-600 dark:text-green-400 text-sm">
+                                                    +{((Number(stakeAmount) * BASE_RATE * 30) / 100).toLocaleString(undefined, { maximumFractionDigits: 1 })} pts
+                                                </p>
+                                            </div>
+                                            <div className="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-green-100 dark:border-green-900/20 text-center">
+                                                <p className="text-[10px] uppercase text-gray-400 font-semibold mb-1">Yearly</p>
+                                                <p className="font-bold text-green-600 dark:text-green-400 text-sm">
+                                                    +{((Number(stakeAmount) * BASE_RATE * 365) / 100).toLocaleString(undefined, { maximumFractionDigits: 1 })} pts
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <button
                                     onClick={handleStake}
                                     disabled={isStakePending || !stakeAmount || isApproving}
-                                    className="w-full py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 bg-green-500 hover:bg-green-600"
+                                    className="w-full py-4 rounded-xl font-semibold text-white flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 bg-green-500 hover:bg-green-600 shadow-lg shadow-green-500/20"
                                 >
                                     {isStakePending ? (
                                         <>

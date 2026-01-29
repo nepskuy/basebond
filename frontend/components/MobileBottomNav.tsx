@@ -12,7 +12,7 @@ const MobileBottomNav = () => {
         { href: '/', icon: Home, label: 'Home' },
         { href: '/explore', icon: Calendar, label: 'Events' },
         { href: '/create', icon: Plus, label: 'Create' },
-        { href: '/governance', icon: Vote, label: 'Govern' },
+        { href: '/community', icon: Vote, label: 'Voice' },
         { href: '/profile', icon: User, label: 'Profile' },
     ];
 
@@ -43,15 +43,15 @@ const MobileBottomNav = () => {
                                 )}
                                 <Icon
                                     className={`w-6 h-6 transition-colors ${isActive
-                                            ? 'text-[#14279B] dark:text-blue-400'
-                                            : 'text-gray-400 dark:text-gray-500'
+                                        ? 'text-[#14279B] dark:text-blue-400'
+                                        : 'text-gray-400 dark:text-gray-500'
                                         }`}
                                 />
                             </div>
                             <span
                                 className={`text-xs mt-1 font-medium transition-colors ${isActive
-                                        ? 'text-[#14279B] dark:text-blue-400'
-                                        : 'text-gray-500 dark:text-gray-400'
+                                    ? 'text-[#14279B] dark:text-blue-400'
+                                    : 'text-gray-500 dark:text-gray-400'
                                     }`}
                             >
                                 {item.label}

@@ -28,6 +28,7 @@
     "react-dom": "19.2.3",
     "react-parallax-tilt": "^1.7.316",
     "react-qr-code": "^2.0.18",
+    "sharp": "^0.34.5",
     "sweetalert2": "^11.26.17",
     "viem": "^2.44.4",
     "wagmi": "^2.19.5"

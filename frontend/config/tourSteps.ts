@@ -153,11 +153,11 @@ export const tourSteps: Record<string, TourStep[]> = {
             }
         }
     ],
-    '/governance': [
+    '/community': [
         {
             element: '#gov-header',
             popover: {
-                title: 'Governance Dashboard',
+                title: 'Community Voice',
                 description: 'Use your earned Points to vote on community proposals. 1 Point = 1 Vote.',
                 side: 'bottom',
             }

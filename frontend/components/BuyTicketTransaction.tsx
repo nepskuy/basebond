@@ -3,12 +3,19 @@
 import { useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
 import { useState, useEffect } from 'react';
 import TransactionModal from './TransactionModal';
-import { Ticket, ArrowRight, Loader2 } from 'lucide-react';
+import { Ticket, ArrowRight, Loader2, CheckCircle } from 'lucide-react';
 import Swal from 'sweetalert2';
+import { useTokenAllowance, useApproveToken } from '@/hooks/useContracts';
+import { parseEther } from 'viem';
+
+// IDRX Token Address (should be from env or constants, assuming env context or hardcoded if needed)
+// For now, fetching from same source as hooks.
+const IDRX_ADDRESS = (process.env.NEXT_PUBLIC_IDRX_ADDRESS || '0x0') as `0x${string}`;
 
 interface BuyTicketTransactionProps {
     eventId: number;
     eventFactoryAddress: `0x${string}`;
+    ticketPrice: number; // New Prop
     onSuccess?: () => void;
     onError?: (error: Error) => void;
     disabled?: boolean;
@@ -17,30 +24,76 @@ interface BuyTicketTransactionProps {
 export default function BuyTicketTransaction({
     eventId,
     eventFactoryAddress,
+    ticketPrice,
     onSuccess,
     onError,
     disabled = false,
 }: BuyTicketTransactionProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const { isConnected } = useAccount();
+    const { address, isConnected } = useAccount();
 
-    // Wagmi hooks
+    // 1. Check Allowance
+    const { allowance, isLoading: isAllowanceLoading, refetch: refetchAllowance } = useTokenAllowance(
+        IDRX_ADDRESS,
+        address as `0x${string}`,
+        eventFactoryAddress
+    );
+
+    // 2. Approve Hook
     const {
-        data: hash,
-        error: writeError,
-        isPending: isWritePending,
+        approve,
+        isLoading: isApproveProcessing,
+        isSuccess: isApproveSuccess,
+        error: approveError,
+        txHash: approveHash
+    } = useApproveToken();
+
+    // 3. Buy Ticket Hook
+    const {
+        data: buyHash,
+        error: buyError,
+        isPending: isBuyPending,
         writeContractAsync
     } = useWriteContract();
 
+    // 4. Wait for Buy Receipt
     const {
-        isLoading: isConfirming,
-        isSuccess: isConfirmed,
-        error: receiptError
+        isLoading: isBuyConfirming,
+        isSuccess: isBuyConfirmed,
+        error: buyReceiptError
     } = useWaitForTransactionReceipt({
-        hash,
+        hash: buyHash,
     });
 
-    const isProcessing = isWritePending || isConfirming;
+    const isProcessing = isBuyPending || isBuyConfirming || isApproveProcessing;
+    const priceWei = parseEther(ticketPrice.toString());
+    const needsApproval = ticketPrice > 0 && allowance < priceWei;
+
+    // Effect: If approval succeeds, refetch allowance (UI update)
+    useEffect(() => {
+        if (isApproveSuccess) {
+            refetchAllowance();
+            // Optional: Auto-trigger buy? Better let user click "Buy" for safety/clarity.
+            Swal.fire({
+                icon: 'success',
+                title: 'Approved!',
+                text: 'You can now proceed to buy the ticket.',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }
+    }, [isApproveSuccess, refetchAllowance]);
+
+
+    const handleApprove = async () => {
+        if (!isConnected) return;
+        try {
+            // Approve exact amount or max uint256? Exact is safer.
+            await approve(IDRX_ADDRESS, eventFactoryAddress, priceWei);
+        } catch (e) {
+            console.error(e);
+        }
+    };
 
     const handleBuy = async () => {
         if (!isConnected) {
@@ -68,67 +121,84 @@ export default function BuyTicketTransaction({
                 ],
                 functionName: 'buyTicket',
                 args: [BigInt(eventId)],
-                value: BigInt(0), // Assuming free or checking allowance separately
+                value: BigInt(0),
             });
         } catch (err: any) {
             console.error("Mint failed", err);
-            // Modal stays open to show error if it wasn't a wallet rejection
-            if (err.code === 4001 || err.cause?.code === 4001 || err.message?.includes('User rejected')) { // User rejected
+            if (err.code === 4001 || err.cause?.code === 4001 || err.message?.includes('User rejected')) {
                 setIsModalOpen(false);
                 return;
             }
         }
     };
 
-    // Effect to handle success/error callbacks
+    const handleClick = () => {
+        if (needsApproval) {
+            handleApprove();
+        } else {
+            handleBuy();
+        }
+    };
+
+    // Effect to handle success/error callbacks for BUY
     useEffect(() => {
-        if (isConfirmed) {
+        if (isBuyConfirmed) {
             onSuccess?.();
-            // Optional: Close modal automatically after delay? 
-            // Better keep it open until user closes or navigates
         }
-        if (writeError || receiptError) {
-            onError?.(writeError || receiptError || new Error('Transaction failed'));
+        if (buyError || buyReceiptError) {
+            onError?.(buyError || buyReceiptError || new Error('Transaction failed'));
         }
-    }, [isConfirmed, writeError, receiptError, onSuccess, onError]);
+    }, [isBuyConfirmed, buyError, buyReceiptError, onSuccess, onError]);
 
     const getModalStatus = () => {
-        if (writeError || receiptError) return 'error';
-        if (isConfirmed) return 'success';
+        if (buyError || buyReceiptError) return 'error';
+        if (isBuyConfirmed) return 'success';
         return 'pending';
     };
 
     const getModalMessage = () => {
         // @ts-ignore
-        if (writeError) {
+        if (buyError) {
             // @ts-ignore
-            if (writeError.cause?.code === 4001 || writeError.message?.includes('User rejected')) return "Transaction cancelled.";
-            return writeError.message;
+            if (buyError.cause?.code === 4001 || buyError.message?.includes('User rejected')) return "Transaction cancelled.";
+            return buyError.message;
         }
-        if (receiptError) return receiptError.message;
-        if (isConfirmed) return "NFT Ticket minted successfully! Check your profile.";
-        if (isWritePending) return "Please confirm the transaction in your wallet...";
-        if (isConfirming) return "Transaction submitted. Waiting for confirmation...";
+        if (buyReceiptError) return buyReceiptError.message;
+        if (isBuyConfirmed) return "NFT Ticket minted successfully! Check your profile.";
+        if (isBuyPending) return "Please confirm the transaction in your wallet...";
+        if (isBuyConfirming) return "Transaction submitted. Waiting for confirmation...";
         return "";
+    };
+
+    // Button Text & State
+    const getButtonText = () => {
+        if (isProcessing) {
+            if (isApproveProcessing) return "Approving IDRX...";
+            return "Processing...";
+        }
+        if (needsApproval) return "Approve IDRX";
+        return "Get NFT Ticket";
     };
 
     return (
         <div className="w-full">
             <button
-                onClick={handleBuy}
-                disabled={disabled || isProcessing}
-                className="w-full py-4 rounded-xl font-semibold text-white bg-gradient-to-r from-[#14279B] via-[#3D56B2] to-[#5C7AEA] hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2"
+                onClick={handleClick}
+                disabled={disabled || isProcessing || isAllowanceLoading}
+                className={`w-full py-4 rounded-xl font-semibold text-white transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2
+                    ${needsApproval ? 'bg-amber-500 hover:bg-amber-600' : 'bg-gradient-to-r from-[#14279B] via-[#3D56B2] to-[#5C7AEA] hover:scale-[1.02]'}
+                `}
             >
-                {isProcessing ? (
+                {isProcessing || isAllowanceLoading ? (
                     <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        Processing...
+                        {getButtonText()}
                     </>
                 ) : (
                     <>
-                        <Ticket className="w-5 h-5" />
-                        Get NFT Ticket
-                        <ArrowRight className="w-5 h-5" />
+                        {needsApproval ? <CheckCircle className="w-5 h-5" /> : <Ticket className="w-5 h-5" />}
+                        {getButtonText()}
+                        {!needsApproval && <ArrowRight className="w-5 h-5" />}
                     </>
                 )}
             </button>
@@ -137,7 +207,7 @@ export default function BuyTicketTransaction({
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 status={getModalStatus()}
-                txHash={hash}
+                txHash={buyHash}
                 message={getModalMessage()}
             />
         </div>

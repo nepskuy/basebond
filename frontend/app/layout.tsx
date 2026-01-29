@@ -8,6 +8,9 @@ import CustomCursor from "@/components/CustomCursor";
 import ScrollToTop from "@/components/ScrollToTop";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { headers } from "next/headers";
+import { cookieToInitialState } from "wagmi";
+import { config } from "./config";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -15,6 +18,7 @@ const jakarta = Plus_Jakarta_Sans({
   variable: '--font-jakarta',
 });
 
+// ... existing metadata ...
 export const metadata: Metadata = {
   title: "BaseBond | Event-to-Community Protocol",
   description: "Web3 Event Engagement Platform on Base. Create events, sell NFT tickets, and reward community loyalty.",
@@ -43,23 +47,27 @@ export const metadata: Metadata = {
     description: "Join the future of onchain events on Base.",
     images: ["/Base.jpg"],
   },
+  manifest: '/manifest.json',
 };
 
 import { Suspense } from 'react';
 import Loading from './loading';
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers();
+  const initialState = cookieToInitialState(config, headersList.get('cookie'));
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={jakarta.className}>
         <CustomCursor />
         <ScrollToTop />
         <ErrorBoundary>
-          <Providers>
+          <Providers initialState={initialState}>
             <Suspense fallback={<Loading />}>
               {children}
             </Suspense>

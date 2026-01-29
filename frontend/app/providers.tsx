@@ -3,57 +3,18 @@
 import * as React from 'react';
 import {
     RainbowKitProvider,
-    getDefaultWallets,
-    getDefaultConfig,
     darkTheme,
     lightTheme,
 } from '@rainbow-me/rainbowkit';
 import {
-    argentWallet,
-    trustWallet,
-    ledgerWallet,
-} from '@rainbow-me/rainbowkit/wallets';
-import {
-    base,
     baseSepolia,
-    localhost,
 } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { WagmiProvider, cookieStorage, createStorage } from 'wagmi';
+import { WagmiProvider, State } from 'wagmi';
 import { ToastProvider } from '@/context/ToastContext';
 import { ThemeProvider, useTheme } from 'next-themes';
 import { OnchainKitProvider } from '@coinbase/onchainkit';
-
-
-const { wallets } = getDefaultWallets();
-
-// Use wagmi's localhost chain with correct chain ID for Hardhat
-const hardhatChain = {
-    ...localhost,
-    id: 31337,
-    name: 'Hardhat',
-} as const;
-
-const config = getDefaultConfig({
-    appName: 'BaseBond',
-    projectId: process.env.NEXT_PUBLIC_PROJECT_ID || 'YOUR_PROJECT_ID',
-    wallets: [
-        ...wallets,
-        {
-            groupName: 'Other',
-            wallets: [argentWallet, trustWallet, ledgerWallet],
-        },
-    ],
-    chains: [
-        baseSepolia, // Default for Hackathon Demo
-        base,
-        hardhatChain,
-    ],
-    ssr: true,
-    storage: createStorage({
-        storage: cookieStorage,
-    }),
-});
+import { config } from './config';
 
 const queryClient = new QueryClient();
 
@@ -121,9 +82,9 @@ function InnerProviders({ children }: { children: React.ReactNode }) {
     );
 }
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({ children, initialState }: { children: React.ReactNode, initialState?: State }) {
     return (
-        <WagmiProvider config={config}>
+        <WagmiProvider config={config} initialState={initialState}>
             <QueryClientProvider client={queryClient}>
                 <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
                     <InnerProviders>

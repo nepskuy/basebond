@@ -93,7 +93,7 @@ export default function CheckInPage() {
     };
 
     const onScanSuccess = async (decodedText: string) => {
-        if (!eventIdNumber || Number.isNaN(eventIdNumber)) {
+        if (Number.isNaN(eventIdNumber)) {
             showToast('Invalid event ID for this check-in page.', 'error');
             return;
         }
@@ -102,7 +102,7 @@ export default function CheckInPage() {
         try {
             const data = JSON.parse(decodedText);
             const attendeeAddress: string =
-                data.walletAddress || decodedText.slice(0, 10) + '...';
+                data.wallet || data.walletAddress || decodedText;
 
             // Optional: match eventId in QR with URL
             if (data.eventId && String(data.eventId) !== String(eventIdParam)) {
@@ -328,8 +328,8 @@ export default function CheckInPage() {
                                     </div>
                                 </div>
                             ) : (
-                                <div className="relative">
-                                    <div id="qr-reader" className="rounded-2xl overflow-hidden border-4 border-[#14279B]/50 shadow-[0_0_15px_rgba(20,39,155,0.5)] animate-pulse" />
+                                <div className="relative pt-6">
+                                    <div id="qr-reader" className="rounded-2xl border-2 border-[#14279B]/30" />
                                     <div className="flex justify-center gap-4 mt-4">
                                         <button
                                             onClick={stopScanning}

@@ -1,8 +1,8 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useReadContracts } from 'wagmi';
-import { parseEther } from 'viem';
+import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useReadContracts, usePublicClient } from 'wagmi';
+import { parseEther, parseAbiItem } from 'viem';
 
 // Contract ABIs (simplified for core functions)
 export const EVENT_FACTORY_ABI = [
@@ -278,6 +278,34 @@ export const ERC20_ABI = [
     },
 ] as const;
 
+export const MOCK_IDRX_ABI = [
+    {
+        name: 'faucet',
+        type: 'function',
+        stateMutability: 'nonpayable',
+        inputs: [],
+        outputs: [],
+    },
+    // Inherited from ERC20 but listed for clarity/safety if needed specific overrides
+    {
+        name: 'approve',
+        type: 'function',
+        stateMutability: 'nonpayable',
+        inputs: [
+            { name: 'spender', type: 'address' },
+            { name: 'amount', type: 'uint256' },
+        ],
+        outputs: [{ type: 'bool' }],
+    },
+    {
+        name: 'balanceOf',
+        type: 'function',
+        stateMutability: 'view',
+        inputs: [{ name: 'account', type: 'address' }],
+        outputs: [{ type: 'uint256' }],
+    },
+] as const;
+
 // Contract addresses (from .env or hardcoded for development)
 const CONTRACTS = {
     eventFactory: (process.env.NEXT_PUBLIC_EVENT_FACTORY_ADDRESS || '0x0') as `0x${string}`,
@@ -459,6 +487,39 @@ export function useMyEvents(organizerAddress?: `0x${string}`) {
         isLoading: result.isLoading,
         error: result.error,
     };
+}
+
+export function useEventCheckInStats(eventId?: number) {
+    const publicClient = usePublicClient();
+    const [checkInCount, setCheckInCount] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        if (eventId === undefined || !publicClient) return;
+
+        const fetchLogs = async () => {
+            setIsLoading(true);
+            try {
+                const logs = await publicClient.getLogs({
+                    address: CONTRACTS.eventFactory,
+                    event: parseAbiItem('event CheckedIn(uint256 indexed eventId, address indexed attendee)'),
+                    args: {
+                        eventId: BigInt(eventId)
+                    },
+                    fromBlock: 'earliest'
+                });
+                setCheckInCount(logs.length);
+            } catch (e) {
+                console.error("Error fetching checkin logs", e);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchLogs();
+    }, [eventId, publicClient]);
+
+    return { checkInCount, isLoading };
 }
 
 // ==================== LOYALTY STAKING HOOKS ====================
@@ -720,6 +781,30 @@ export function useApproveToken() {
 
     return {
         approve,
+        isLoading: isPending || isConfirming,
+        isSuccess,
+        error,
+        txHash: hash,
+    };
+}
+
+
+
+export function useRequestFaucet() {
+    const { writeContract, data: hash, isPending, error } = useWriteContract();
+    const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+    const requestFaucet = async () => {
+        writeContract({
+            address: CONTRACTS.idrxToken,
+            abi: MOCK_IDRX_ABI,
+            functionName: 'faucet',
+            args: [],
+        });
+    };
+
+    return {
+        requestFaucet,
         isLoading: isPending || isConfirming,
         isSuccess,
         error,

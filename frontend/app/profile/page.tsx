@@ -149,7 +149,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex gap-4 mb-8 border-b border-gray-200 dark:border-gray-800">
+                <div className="flex gap-4 mb-8 border-b border-gray-200 dark:border-gray-800 overflow-x-auto pb-1 scrollbar-hide">
                     <button
                         onClick={() => setActiveTab('tickets')}
                         className={`px-6 py-4 font-medium text-lg border-b-2 transition-all duration-300 ${activeTab === 'tickets'

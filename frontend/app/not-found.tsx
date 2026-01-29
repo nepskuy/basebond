@@ -74,7 +74,7 @@ export default function NotFound() {
                                     { href: '/explore', label: 'Explore Events' },
                                     { href: '/create', label: 'Create Event' },
                                     { href: '/staking', label: 'Staking' },
-                                    { href: '/governance', label: 'Governance' },
+                                    { href: '/community', label: 'Community Voice' },
                                 ].map((link) => (
                                     <a
                                         key={link.href}
