@@ -109,11 +109,14 @@ export default function CheckInPage() {
         // Parse QR data (expected format: { ticketId, walletAddress, eventId })
         try {
             const data = JSON.parse(decodedText);
+            // Handle both legacy (long keys) and new minified (short keys) formats
             const attendeeAddress: string =
-                data.wallet || data.walletAddress || decodedText;
+                data.w || data.wallet || data.walletAddress || decodedText;
+
+            const qrEventId = data.e || data.eventId;
 
             // Optional: match eventId in QR with URL
-            if (data.eventId && String(data.eventId) !== String(eventIdParam)) {
+            if (qrEventId && String(qrEventId) !== String(eventIdParam)) {
                 const result: CheckInResult = {
                     success: false,
                     address: attendeeAddress,
@@ -281,7 +284,8 @@ export default function CheckInPage() {
 
                         {/* Scanner Container */}
                         <div className="relative">
-                            <div id="qr-reader-temp" className="hidden" />
+                            {/* MUST be visible in DOM for file scanning to work - use invisible + absolute instead of hidden */}
+                            <div id="qr-reader-temp" className="invisible absolute pointer-events-none" />
                             {!isScanning ? (
                                 <div className="aspect-square max-w-md mx-auto flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-2xl p-8">
                                     <div

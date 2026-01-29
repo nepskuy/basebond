@@ -19,12 +19,13 @@ export const TicketQR: React.FC<TicketQRProps> = ({
     eventName,
     size = 200,
 }) => {
+    // Minified data for less dense QR code
     const qrData = JSON.stringify({
-        type: 'BASEBOND_TICKET',
-        eventId: eventId.toString(),
-        ticketId: ticketId.toString(),
-        wallet: walletAddress,
-        timestamp: Date.now(),
+        t: 'BB_TKT', // Type
+        e: eventId.toString(),
+        tid: ticketId.toString(),
+        w: walletAddress,
+        ts: Date.now(),
     });
 
     const downloadQR = () => {
