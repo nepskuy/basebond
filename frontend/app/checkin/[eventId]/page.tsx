@@ -65,9 +65,15 @@ export default function CheckInPage() {
                 const scanner = new Html5QrcodeScanner(
                     'qr-reader',
                     {
-                        fps: 10,
+                        fps: 20, // Increased FPS for faster scanning
                         qrbox: { width: 250, height: 250 },
                         aspectRatio: 1.0,
+                        videoConstraints: {
+                            facingMode: "environment",
+                            focusMode: "continuous" // Attempt to force continuous focus
+                        } as any,
+                        // Experimental feature for better performance on mobile
+                        useBarCodeDetectorIfSupported: true,
                     },
                     false,
                 );
