@@ -48,4 +48,4 @@ All contracts are verified on Base Sepolia Testnet:
 - **LoyaltyStaking**: [0x7921d7d107E7d13d9Cf937209e50233986843200](https://sepolia.basescan.org/address/0x7921d7d107E7d13d9Cf937209e50233986843200)
 
 ## Demo Video
-[Link to Demo Video]
+[Watch Demo Video](https://youtu.be/0Duzi9dlob8)
